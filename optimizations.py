@@ -45,10 +45,21 @@ def sgd_loop(training_function, training_input, validation_function, validation_
     return best_val_error, best_iter
 
 
-def sgd(Classifier, x_data, y_data, train_validation_split=0.7, learning_rate=0.1):
+def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0.7, learning_rate=0.1):
+    """ A function that takes as input the Classifier class and x, y data as numpy 2darrays and performs sgd.
+        :param Classifier: classifier Class object
+        :param classifier_options: options (hyper parameters) for the classifier
+        :param x_data: numpy matrix containing train + validation data
+        :param y_data: numpy matrix containing labels
+        :param train_validation_split: the fraction of instances to use as training (rest used for validation)
+        :param learning_rate: learning rate to use for updates
+    """
     x_symbolic = T.fmatrix(name='x')
     y_symbolic = T.lvector(name='y')
     index_symbolic = T.lscalar(name='index')
+
+    x_data = theano.shared(np.asarray(x_data, dtype='float32'))
+    y_data = theano.shared(np.asarray(y_data, dtype='int64'))
 
     num_instances = x_data.get_value(borrow=True).shape[0]
     idx = int(num_instances * train_validation_split)
