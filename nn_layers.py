@@ -8,7 +8,7 @@ import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
 from support import DispatchTable
-from neuralnets.nn_funcs import activation_funcs
+from neuralnets_theano.nn_funcs import activation_funcs
 
 
 class NNetLayer(object):

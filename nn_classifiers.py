@@ -8,7 +8,7 @@ import theano
 import theano.tensor as T
 import numpy as np
 
-from neuralnets.nn_layers import layer_funcs
+from nn_layers import layer_funcs
 from nn_funcs import activation_funcs, regularization_funcs
 
 
@@ -90,7 +90,7 @@ class Classifier(object):
 class SoftmaxClassifier(Classifier):
     """ A softmax classifier class that can be used either as a standalone classifier or as a final layer on an ANN."""
     # TODO: Check if call to __init__ of super class is required by programming practice
-    def __init__(self, x=None, n_in=None, n_out=None, params=None):
+    def __init__(self, x=None, config=None, params=None):
         """ :type x:  theano shared variable
             :param x: input to the Softmax layer
 
@@ -100,6 +100,9 @@ class SoftmaxClassifier(Classifier):
             :type n_out:  int
             :param n_out: number of class labels
             """
+
+        n_in = config[0]
+        n_out = config[1]
         self.x = x if x else T.fmatrix('x')
         if params:
             self.w = params[0]
@@ -168,7 +171,7 @@ class FFNN(Classifier):
             self.params.extend(layer.params)
             inp = layer.output
 
-        self.classifier = SoftmaxClassifier(x=self.nnet[-1].output, n_in=config[-2], n_out=config[-1])
+        self.classifier = SoftmaxClassifier(x=self.nnet[-1].output, config=[config[-2], config[-1]])
         self.params.extend(self.classifier.params)
         self.get_error_rate = self.classifier.get_error_rate
 
@@ -217,7 +220,7 @@ class FFNN_Dropout(FFNN):
             inp = layer.output
         classifier_params = (self.classifier.w, self.classifier.b)
         self.classifier_sans_dropout = SoftmaxClassifier(x=self.nnet_sans_dropout[-1].output,
-                                                         n_in=config[-2], n_out=config[-1], params=classifier_params)
+                                                         config=[config[-2], config[-1]], params=classifier_params)
         self.get_error_rate = self.classifier_sans_dropout.get_error_rate
         self.get_accuracy = self.classifier_sans_dropout.get_accuracy
         self.get_precision = self.classifier_sans_dropout.get_precision

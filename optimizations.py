@@ -11,10 +11,10 @@ import theano.tensor as T
 
 
 def sgd_loop(training_function, training_input, validation_function, validation_input,
-             max_iter=1000, tolerance=0.0001, n_history=50, verbose=True):
+             max_iter=1000, tolerance=0.05, n_history=10, verbose=True):
     best_val_error = np.inf
     best_iter = 0
-    prev_n_val_error = deque([np.inf for h in range(n_history)])
+    prev_n_val_error = deque([best_val_error for h in range(n_history)])
     i = 0
     done = False
     if verbose:
@@ -27,16 +27,16 @@ def sgd_loop(training_function, training_input, validation_function, validation_
         if verbose:
             print('{0} \t\t\t {1} \t\t\t {2} \t\t\t {3}'.format(i, train_cost, val_error, best_val_error))
         if val_error < best_val_error:
-            best_val_err = deepcopy(val_error)
+            best_val_error = deepcopy(val_error)
             best_iter = deepcopy(i)
+            prev_n_val_error = deque([best_val_error for h in range(n_history)])
         prev_n_val_error.popleft()
         prev_n_val_error.append(val_error)
-        # TODO: weighted mean
-        if sum(prev_n_val_error)/len(prev_n_val_error) < (best_val_error + tolerance):
-            if verbose:
-                print('------')
-                print(' Validation Error hasn\'t budged in {0} iterations, stopping sgd'.format(n_history))
-            done = True
+        # if np.mean(np.asarray(prev_n_val_error)) > (best_val_error + tolerance):
+        #     if verbose:
+        #         print('------')
+        #         print(' Validation Error hasn\'t budged in {0} iterations, stopping sgd'.format(n_history))
+        #     done = True
 
     if verbose:
         print('===============================================')
@@ -45,7 +45,7 @@ def sgd_loop(training_function, training_input, validation_function, validation_
     return best_val_error, best_iter
 
 
-def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0.7, learning_rate=0.1):
+def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0.7, learning_rate=0.1, max_iter=1000):
     """ A function that takes as input the Classifier class and x, y data as numpy 2darrays and performs sgd.
         :param Classifier: classifier Class object
         :param classifier_options: options (hyper parameters) for the classifier
@@ -66,7 +66,8 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
 
     input_dimension = x_data.get_value(borrow=True).shape[1]
     num_classes = len(set(y_data.get_value()))
-    clf = Classifier(x=x_symbolic, n_in=input_dimension, n_out=num_classes)
+    classifier_options['config'] = [input_dimension] + classifier_options['config'] + [num_classes]
+    clf = Classifier(x=x_symbolic, **classifier_options)
     cost, updates = clf.get_cost_updates(y_true=y_symbolic, learning_rate=learning_rate)
     error = clf.get_error_rate(y_symbolic)
 
@@ -77,6 +78,6 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
                                           givens={x_symbolic: x_data[index_symbolic:],
                                                   y_symbolic: y_data[index_symbolic:]})
 
-    sgd_loop(training_function=training_function, validation_function=validation_function,
-             training_input=idx, validation_input=idx)
-    return None
+    best_val_error, best_iter = sgd_loop(training_function=training_function, validation_function=validation_function,
+                                         training_input=idx, validation_input=idx, max_iter=max_iter)
+    return best_val_error, best_iter, clf

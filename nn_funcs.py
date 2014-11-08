@@ -4,7 +4,7 @@ __docformat__ = 'restructedtext en'
 
 import theano.tensor as T
 
-from neuralnets.support import DispatchTable
+from support import DispatchTable
 
 
 # TODO: maxout
