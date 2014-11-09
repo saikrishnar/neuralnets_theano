@@ -23,6 +23,9 @@ class Classifier(object):
     def get_cost_updates(self, y_true=None, regularization='l1', reg_wt=0.01, learning_rate=0.1):
         return
 
+    def get_prediction(self):
+        return self.y_pred
+
     def get_error_rate(self, y_true):
         """ Returns the error rate.
             :type y_true:  Theano shared variable
