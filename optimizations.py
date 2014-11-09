@@ -10,10 +10,11 @@ import theano
 import theano.tensor as T
 
 
-def sgd_loop(training_function, training_input, validation_function, validation_input,
-             max_iter=1000, tolerance=0.05, n_history=10, verbose=True):
+def sgd_loop(classifier, training_function, training_input, validation_function, validation_input,
+             max_iter=1000, tolerance=0.05, n_history=50, verbose=True):
     best_val_error = np.inf
     best_iter = 0
+    best_classifier = deepcopy(classifier)
     prev_n_val_error = deque([best_val_error for h in range(n_history)])
     i = 0
     done = False
@@ -29,20 +30,21 @@ def sgd_loop(training_function, training_input, validation_function, validation_
         if val_error < best_val_error:
             best_val_error = deepcopy(val_error)
             best_iter = deepcopy(i)
+            best_classifier = deepcopy(classifier)
             prev_n_val_error = deque([best_val_error for h in range(n_history)])
         prev_n_val_error.popleft()
         prev_n_val_error.append(val_error)
-        # if np.mean(np.asarray(prev_n_val_error)) > (best_val_error + tolerance):
-        #     if verbose:
-        #         print('------')
-        #         print(' Validation Error hasn\'t budged in {0} iterations, stopping sgd'.format(n_history))
-        #     done = True
+        if np.mean(np.asarray(prev_n_val_error)) > (best_val_error + tolerance):
+            done = True
+            if verbose:
+                print('------')
+                print(' Validation Error hasn\'t budged in {0} iterations, stopping sgd'.format(n_history))
 
     if verbose:
         print('------------------------------------------')
         print('Best validation error: {0} \n At iteration: {1}'.format(best_val_error, best_iter))
 
-    return best_val_error, best_iter
+    return best_val_error, best_iter, best_classifier
 
 
 def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0.7, learning_rate=0.1, max_iter=1000):
@@ -78,7 +80,8 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
                                           givens={x_symbolic: x_data[index_symbolic:],
                                                   y_symbolic: y_data[index_symbolic:]})
 
-    best_val_error, best_iter = sgd_loop(training_function=training_function, validation_function=validation_function,
-                                         training_input=idx, validation_input=idx, max_iter=max_iter)
+    best_val_error, best_iter, best_classifier = sgd_loop(classifier, training_function=training_function,
+                                                          validation_function=validation_function, training_input=idx,
+                                                          validation_input=idx, max_iter=max_iter)
 
-    return best_val_error, best_iter, classifier
+    return best_val_error, best_iter, best_classifier
