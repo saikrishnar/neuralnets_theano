@@ -39,7 +39,7 @@ def sgd_loop(training_function, training_input, validation_function, validation_
         #     done = True
 
     if verbose:
-        print('===============================================')
+        print('------------------------------------------')
         print('Best validation error: {0} \n At iteration: {1}'.format(best_val_error, best_iter))
 
     return best_val_error, best_iter
@@ -54,9 +54,9 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
         :param train_validation_split: the fraction of instances to use as training (rest used for validation)
         :param learning_rate: learning rate to use for updates
     """
-    x_symbolic = T.fmatrix(name='x')
-    y_symbolic = T.lvector(name='y')
-    index_symbolic = T.lscalar(name='index')
+    x_symbolic = T.fmatrix(name='x_symbolic')
+    y_symbolic = T.lvector(name='y_symbolic')
+    index_symbolic = T.lscalar(name='index_symbolic')
 
     x_data = theano.shared(np.asarray(x_data, dtype='float32'))
     y_data = theano.shared(np.asarray(y_data, dtype='int64'))
@@ -67,9 +67,9 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
     input_dimension = x_data.get_value(borrow=True).shape[1]
     num_classes = len(set(y_data.get_value()))
     classifier_options['config'] = [input_dimension] + classifier_options['config'] + [num_classes]
-    clf = Classifier(x=x_symbolic, **classifier_options)
-    cost, updates = clf.get_cost_updates(y_true=y_symbolic, learning_rate=learning_rate)
-    error = clf.get_error_rate(y_symbolic)
+    classifier = Classifier(x=x_symbolic, **classifier_options)
+    cost, updates = classifier.get_cost_updates(y_true=y_symbolic, learning_rate=learning_rate)
+    error = classifier.get_error_rate(y_symbolic)
 
     training_function = theano.function(inputs=[index_symbolic], outputs=[cost, error], updates=updates,
                                         givens={x_symbolic: x_data[:index_symbolic],
@@ -80,4 +80,5 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
 
     best_val_error, best_iter = sgd_loop(training_function=training_function, validation_function=validation_function,
                                          training_input=idx, validation_input=idx, max_iter=max_iter)
-    return best_val_error, best_iter, clf
+
+    return best_val_error, best_iter, classifier

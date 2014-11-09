@@ -13,7 +13,7 @@ from nn_funcs import activation_funcs, regularization_funcs
 
 
 class Classifier(object):
-    """ Abstract base class for classifiers."""
+    """ Base class for classifiers."""
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
@@ -56,10 +56,10 @@ class Classifier(object):
             :rtype  Theano shared variable
             :return precision
             """
-        true_positives = T.sum(T.eq(self.y_pred, True) * T.eq(y_true, True))
-        test_outcome_positives = T.sum(T.eq(self.y_pred, True))
+        true_positives = T.sum(T.mul(T.eq(self.y_pred, 1.), T.eq(y_true, 1.)))
+        test_outcome_positives = T.sum(T.eq(self.y_pred, 1.))
 
-        return true_positives / test_outcome_positives
+        return T.true_div(true_positives, test_outcome_positives)
 
     def get_recall(self, y_true):
         """ ~~~~~~~~~~ Untested ~~~~~~~~~~
@@ -70,10 +70,12 @@ class Classifier(object):
             :rtype  Theano shared variable
             :return recall/sensitivity
             """
-        true_positives = T.sum(T.eq(self.y_pred, True) * T.eq(y_true, True))
-        condition_positives = T.sum(T.eq(y_true, True))
+        true_positives = T.sum(T.mul(T.eq(self.y_pred, 1.), T.eq(y_true, 1.)))
+        condition_positives = T.sum(T.eq(y_true, 1.))
 
-        return true_positives / condition_positives
+        return T.true_div(true_positives, condition_positives)
+
+    get_sensitivity = get_recall
 
     def get_specificity(self, y_true):
         """ ~~~~~~~~~~ Untested ~~~~~~~~~~
@@ -82,12 +84,26 @@ class Classifier(object):
             :param y_true: Target
 
             :rtype  Theano shared variable
-            :return recall/sensitivity
+            :return specificity
             """
-        true_negatives = T.sum(T.eq(self.y_pred, False) * T.eq(y_true, False))
-        condition_negatives = T.sum(T.eq(y_true, False))
+        true_negatives = T.sum(T.mul(T.eq(self.y_pred, 0.), T.eq(y_true, 0.)))
+        condition_negatives = T.sum(T.eq(y_true, 0.))
 
-        return true_negatives / condition_negatives
+        return T.true_div(true_negatives, condition_negatives)
+
+    def get_fscore(self, y_true):
+        """ ~~~~~~~~~~ Untested ~~~~~~~~~~
+            Returns f-score of binary predictions.
+            :type y_true:  Theano shared variable
+            :param y_true: Target
+
+            :rtype  Theano shared variable
+            :return f-score
+            """
+        precision = self.get_precision(y_true)
+        recall = self.get_recall(y_true)
+        # return T.true_div(T.mul(precision, recall), T.sum(precision, recall))
+        return 2.0 * (precision * recall)/(precision + recall)
 
 
 class SoftmaxClassifier(Classifier):
@@ -177,6 +193,10 @@ class FFNN(Classifier):
         self.classifier = SoftmaxClassifier(x=self.nnet[-1].output, config=[config[-2], config[-1]])
         self.params.extend(self.classifier.params)
         self.get_error_rate = self.classifier.get_error_rate
+        self.get_accuracy = self.classifier.get_accuracy
+        self.get_precision = self.classifier.get_precision
+        self.get_recall = self.classifier.get_recall
+        self.y_pred = self.classifier.y_pred
 
     def get_cost_updates(self, y_true=None, learning_rate=0.01, regularization='l1', reg_wt=0.01):
         """ Implements log-loss with regularization.
@@ -228,3 +248,4 @@ class FFNN_Dropout(FFNN):
         self.get_accuracy = self.classifier_sans_dropout.get_accuracy
         self.get_precision = self.classifier_sans_dropout.get_precision
         self.get_recall = self.classifier_sans_dropout.get_recall
+        self.y_pred = self.classifier_sans_dropout.y_pred
