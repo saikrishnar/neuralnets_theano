@@ -2,26 +2,24 @@ __author__ = 'Siddharth Pramod'
 __email__ = 'spramod1@umbc.edu'
 __docformat__ = 'restructedtext en'
 
-import abc
 
 import theano
 import theano.tensor as T
 import numpy as np
+from copy import deepcopy
 
 from nn_layers import layer_funcs
-from nn_funcs import activation_funcs, regularization_funcs
+from neuralnets_theano.nn_funcs import activation_funcs, regularization_funcs
 
 
 class Classifier(object):
     """ Base class for classifiers."""
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self):
         self.y_pred = None
+        self.params = []
 
-    @abc.abstractmethod
     def get_cost_updates(self, y_true=None, regularization='l1', reg_wt=0.01, learning_rate=0.1):
-        return
+        return NotImplementedError
 
     def get_prediction(self):
         return self.y_pred
@@ -104,6 +102,14 @@ class Classifier(object):
         recall = self.get_recall(y_true)
         # return T.true_div(T.mul(precision, recall), T.sum(precision, recall))
         return 2.0 * (precision * recall)/(precision + recall)
+
+    def get_parameters(self):
+        return [parameter.get_value() for parameter in self.params]
+
+    def set_parameters(self, backup_parameters):
+        for parameter, backup in zip(self.params, backup_parameters):
+            parameter.set_value(backup)
+        return None
 
 
 class SoftmaxClassifier(Classifier):
