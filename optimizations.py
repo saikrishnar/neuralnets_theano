@@ -14,7 +14,7 @@ def sgd_loop(classifier, training_function, training_input, validation_function,
              max_iter=1000, tolerance=0.05, n_history=50, verbose=True):
     best_val_error = np.inf
     best_iter = 0
-    best_classifier = deepcopy(classifier)
+    # best_classifier = deepcopy(classifier)
     prev_n_val_error = deque([best_val_error for h in range(n_history)])
     i = 0
     done = False
@@ -44,7 +44,8 @@ def sgd_loop(classifier, training_function, training_input, validation_function,
         print('------------------------------------------')
         print('Best validation error: {0} \n At iteration: {1}'.format(best_val_error, best_iter))
 
-    return best_val_error, best_iter, best_classifier
+    # return best_val_error, best_iter, best_classifier
+    return best_val_error, best_iter, classifier
 
 
 def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0.7, learning_rate=0.1, max_iter=1000):
@@ -82,6 +83,6 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
 
     best_val_error, best_iter, best_classifier = sgd_loop(classifier, training_function=training_function,
                                                           validation_function=validation_function, training_input=idx,
-                                                          validation_input=idx, max_iter=max_iter)
+                                                          validation_input=idx, max_iter=max_iter, verbose=False)
 
     return best_val_error, best_iter, best_classifier

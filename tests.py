@@ -4,8 +4,6 @@ __docformat__ = 'restructedtext en'
 
 import numpy as np
 from sklearn import datasets
-import theano
-import theano.tensor as T
 
 from nn_classifiers import SoftmaxClassifier, FFNN, FFNN_Dropout
 from neuralnets_theano.optimizations import sgd
