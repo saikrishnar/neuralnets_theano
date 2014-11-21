@@ -1,2 +1,5 @@
 # Ignore .pyc files
 *.pyc
+
+# ignore specific
+training.py
