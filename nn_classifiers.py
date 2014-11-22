@@ -255,3 +255,20 @@ class FFNN_Dropout(FFNN):
         self.get_precision = self.classifier_sans_dropout.get_precision
         self.get_recall = self.classifier_sans_dropout.get_recall
         self.y_pred = self.classifier_sans_dropout.y_pred
+
+
+if __name__ == '__main__':
+    # import unittest
+    # from copy import deepcopy
+    #
+    # class TestClassifier(unittest.TestCase):
+    #     def setUp(self):
+    #         self.y_true_data = np.random.random_integers(low=0, high=1, size=(10, 4))
+    #         self.y_true_symbolic = T.lmatrix('p')
+    #         self.classifier = Classifier()
+    #         self.classifier.y_pred.set_value()
+    #         self.y_true_data = theano.shared(np.asarray(self.y_true_data, dtype='int64'))
+    #
+    #     def test_get_error_rate(self):
+    #         self.assertAlmostEqual(self.classifier.get_error_rate(self.y))
+    pass
