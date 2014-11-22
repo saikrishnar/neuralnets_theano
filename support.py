@@ -3,9 +3,6 @@ __email__ = 'spramod1@umbc.edu'
 __docformat__ = 'restructedtext en'
 
 
-import theano.tensor as T
-
-
 def print_table(table):
     """ Pretty print a table provided as a list of rows."""
     col_size = [max(len(str(val)) for val in column) for column in zip(*table)]
@@ -29,6 +26,8 @@ class DispatchTable(dict):
 
 
 if __name__ == '__main__':
+    import theano.tensor as T
+
     def test_dispatchtable():
         activation_funcs = {'sigmoid': T.nnet.sigmoid,
                             'tanh': T.tanh,
