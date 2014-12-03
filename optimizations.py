@@ -10,6 +10,8 @@ import theano
 import theano.tensor as T
 
 
+# TODO: rename this file and document
+
 def sgd_loop(classifier, training_function, training_input, validation_function, validation_input,
              max_iter=1000, tolerance=0.05, n_history=50, verbose=True):
     best_val_error = np.inf
@@ -22,7 +24,6 @@ def sgd_loop(classifier, training_function, training_input, validation_function,
     if verbose:
         print ('Iter # \t\t\t TrainCost \t\t\t ValErr \t\t\t\t PrevBestValErr')
     while (i < max_iter) and (not done):
-        # TODO implement 'done' condition, aka early stopping
         i += 1
         train_cost, train_error = training_function(training_input)
         val_error = validation_function(validation_input)
@@ -89,3 +90,27 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
                                                           validation_input=idx, max_iter=max_iter, verbose=False)
 
     return best_val_error, best_iter, best_classifier
+
+
+def test_classifier(classifier, x_data, y_data):
+    y_symbolic = T.lvector(name='y_symbolic')
+    index_symbolic = T.lscalar(name='index_symbolic')
+
+    x_data = theano.shared(np.asarray(x_data, dtype='float32'))
+    y_data = theano.shared(np.asarray(y_data, dtype='int64'))
+
+    y_pred_symbolic = classifier.get_prediction()
+    precision_symbolic = classifier.get_precision(y_symbolic)
+    recall_symbolic = classifier.get_recall(y_symbolic)
+    specificity_symbolic = classifier.get_specificity(y_symbolic)
+    f_score_symbolic = classifier.get_fscore(y_symbolic)
+
+    index_value = x_data.get_value(borrow=True).shape[0]
+    output_function = theano.function(inputs=[index_symbolic],
+                                      outputs=[y_pred_symbolic, precision_symbolic, recall_symbolic,
+                                               specificity_symbolic, f_score_symbolic],
+                                      givens={classifier.x: x_data[:index_symbolic],
+                                              y_symbolic: y_data[:index_symbolic]})
+
+    y_pred, precision, recall, specificity, f_score = output_function(index_value)
+    return y_pred, precision, recall, specificity, f_score
