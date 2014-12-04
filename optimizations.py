@@ -92,6 +92,16 @@ def sgd(Classifier, classifier_options, x_data, y_data, train_validation_split=0
     return best_val_error, best_iter, best_classifier
 
 
+def get_prediction(classifier, x_data):
+    index_symbolic = T.lscalar(name='index_symbolic')
+    x_data = theano.shared(np.asarray(x_data, dtype='float32'))
+    y_pred_symbolic = classifier.get_prediction()
+    index_value = x_data.get_value(borrow=True).shape[0]
+    predict_function = theano.function(inputs=[index_symbolic], outputs=[y_pred_symbolic],
+                                       givens={classifier.x: x_data[:index_symbolic]})
+    return predict_function(index_value)
+
+
 def test_classifier(classifier, x_data, y_data):
     y_symbolic = T.lvector(name='y_symbolic')
     index_symbolic = T.lscalar(name='index_symbolic')
